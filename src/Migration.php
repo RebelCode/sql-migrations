@@ -34,7 +34,7 @@ class Migration implements MigrationInterface
      *
      * @var string
      */
-    protected $up;
+    protected $upSql;
 
     /**
      * The migration's "down SQL query.
@@ -43,7 +43,7 @@ class Migration implements MigrationInterface
      *
      * @var string
      */
-    protected $down;
+    protected $downSql;
 
     /**
      * Constructor.
@@ -52,15 +52,15 @@ class Migration implements MigrationInterface
      *
      * @param string $key      The migration key, to uniquely identify it.
      * @param int    $priority The migration's priority index, where larger numbers indicate later execution.
-     * @param string $up       The migration's "up" SQL query.
-     * @param string $down     The migration's "down" SQL query.
+     * @param string $upSql    The migration's "up" SQL query.
+     * @param string $downSql  The migration's "down" SQL query.
      */
-    public function __construct($key, $priority, $up, $down)
+    public function __construct($key, $priority, $upSql, $downSql)
     {
         $this->key = $key;
         $this->priority = $priority;
-        $this->up = $up;
-        $this->down = $down;
+        $this->upSql = $upSql;
+        $this->downSql = $downSql;
     }
 
     /**
@@ -80,7 +80,7 @@ class Migration implements MigrationInterface
      */
     public function getUpQuery()
     {
-        return $this->up;
+        return $this->upSql;
     }
 
     /**
@@ -90,7 +90,7 @@ class Migration implements MigrationInterface
      */
     public function getDownQuery()
     {
-        return $this->down;
+        return $this->downSql;
     }
 
     /**

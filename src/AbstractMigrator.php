@@ -155,13 +155,13 @@ abstract class AbstractMigrator implements MigratorInterface
     protected function sortMigrations($migrations, $direction = 1)
     {
         // Reduce direction to 1 (up) or -1 (down)
-        $mult = (int) ($direction / abs($direction));
+        $multiplier = (int) ($direction / abs($direction));
         // If an iterator, change to array to be able to use usort()
         $array = is_array($migrations) ? $migrations : iterator_to_array($migrations);
 
-        usort($array, function (MigrationInterface $a, MigrationInterface $b) use ($mult) {
+        usort($array, function (MigrationInterface $migrationA, MigrationInterface $migrationB) use ($multiplier) {
             // The multiplier is used to reverse the sorting if the direction is down
-            return ($a->getPriority() - $b->getPriority()) * $mult;
+            return ($migrationA->getPriority() - $migrationB->getPriority()) * $multiplier;
         });
 
         return $array;
