@@ -74,26 +74,44 @@ abstract class AbstractMigrator implements MigratorInterface
      */
     protected function runMigrations($version, $direction, $migrations)
     {
-        // Queue of migrations that have been run
         $runMigrations = [];
-        // Will hold the failed migration and the corresponding exception, if any
-        $migrationException = null;
-        $failedMigration = null;
+        $exception = null;
+        $fMigration = null;
 
+        // Run the migrations and record each successful migration in case of a failure and a required rollback
         foreach ($migrations as $migration) {
             try {
                 $this->doMigration($migration, $version, $direction);
                 $runMigrations[] = $migration;
-            } catch (Exception $migrationException) {
-                $failedMigration = $migration;
+            } catch (Exception $exception) {
+                $fMigration = $migration;
                 break;
             }
         }
 
-        // If migrating failed, rollback the run migrations
-        if ($migrationException !== null && $failedMigration !== null) {
-            $this->handleMigrationFailure($version, $direction, $runMigrations, $failedMigration, $migrationException);
+        // If successful, stop here
+        if ($exception === null) {
+            return;
         }
+
+        $dirStr = ($direction > 0) ? 'up' : 'down';
+        $key = $fMigration->getKey();
+
+        try {
+            $this->rollbackMigrations($version, $direction, $runMigrations);
+        } catch (RuntimeException $rollbackException) {
+            throw new RuntimeException(
+                sprintf('The "%1$s" %2$s migration and subsequent rollback were unsuccessful', $key, $dirStr),
+                0,
+                $rollbackException
+            );
+        }
+
+        throw new RuntimeException(
+            sprintf('The "%1$s" %2$s migration failed and rollback was successful', $key, $dirStr),
+            0,
+            $exception
+        );
     }
 
     /**
@@ -106,39 +124,23 @@ abstract class AbstractMigrator implements MigratorInterface
      *                                                     for "down" migrations.
      * @param MigrationInterface[]|Traversable $migrations The list of migration instances that were successfully run
      *                                                     prior to the failure.
-     * @param MigrationInterface               $fMigration The migration instance that failed.
-     * @param Exception                        $exception  The exception that was thrown.
      */
-    protected function handleMigrationFailure(
-        $version,
-        $direction,
-        $migrations,
-        MigrationInterface $fMigration,
-        Exception $exception
-    ) {
-        $dirStr = ($direction > 0) ? 'up' : 'down';
-        $fMigrKey = $fMigration->getKey();
-
-        // If an exception was thrown, iterate through the queue and run each migration in the reverse direction
+    protected function rollbackMigrations($version, $direction, $migrations)
+    {
+        // Run the migrations in the reverse direction
         foreach ($migrations as $migration) {
             try {
                 $this->doMigration($migration, $version, $direction * -1);
             } catch (Exception $rException) {
-                // Hopefully this never happens
+                $dirStr = ($direction > 0) ? 'up' : 'down';
+                $migKey = $migration->getKey();
                 throw new RuntimeException(
-                    sprintf('The "%1$s" %2$s migration failed and rolling back was unsuccessful', $fMigrKey, $dirStr),
+                    sprintf('Rollback failed for the "%1$s" %2$s migration', $migKey, $dirStr),
                     null,
                     $rException
                 );
             }
         }
-
-        // Wrap the previously thrown exception in a runtime exception and throw
-        throw new RuntimeException(
-            sprintf('The "%1$s" %2$s migration failed. Rollback was successful', $fMigrKey, $dirStr),
-            0,
-            $exception
-        );
     }
 
     /**
@@ -152,8 +154,11 @@ abstract class AbstractMigrator implements MigratorInterface
      *
      * @return MigrationInterface[] The sorted migration instance.
      */
-    protected function sortMigrations($migrations, $direction = 1)
-    {
+    protected
+    function sortMigrations(
+        $migrations,
+        $direction = 1
+    ) {
         // Reduce direction to 1 (up) or -1 (down)
         $multiplier = (int) ($direction / abs($direction));
         // If an iterator, change to array to be able to use usort()
@@ -179,8 +184,12 @@ abstract class AbstractMigrator implements MigratorInterface
      *
      * @throws RuntimeException If the query failed.
      */
-    protected function doMigration(MigrationInterface $migration, $version, $direction)
-    {
+    protected
+    function doMigration(
+        MigrationInterface $migration,
+        $version,
+        $direction
+    ) {
         $query = ($direction > 0) ? $migration->getUpQuery() : $migration->getDownQuery();
 
         $this->runQuery($query);
@@ -197,8 +206,13 @@ abstract class AbstractMigrator implements MigratorInterface
      * @param MigrationInterface[]|Traversable $migrations The list of migration instances that were run.
      * @param RuntimeException                 $exception  The exception that was thrown.
      */
-    protected function onMigrationsError($version, $direction, $migrations, RuntimeException $exception)
-    {
+    protected
+    function onMigrationsError(
+        $version,
+        $direction,
+        $migrations,
+        RuntimeException $exception
+    ) {
         throw $exception;
     }
 
