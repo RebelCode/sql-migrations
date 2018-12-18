@@ -24,11 +24,12 @@ abstract class AbstractLoggingMigrator extends AbstractMigrator
 
         $this->prepareLogTable();
 
-        if ($direction > 0) {
-            $this->logMigration($migration, $version);
-        } else {
+        if ($direction < 0) {
             $this->delogMigration($migration, $version);
+            return;
         }
+
+        $this->logMigration($migration, $version);
     }
 
     /**
