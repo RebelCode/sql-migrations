@@ -75,43 +75,32 @@ abstract class AbstractMigrator implements MigratorInterface
     protected function runMigrations($version, $direction, $migrations)
     {
         $runMigrations = [];
-        $exception = null;
-        $fMigration = null;
 
         // Run the migrations and record each successful migration in case of a failure and a required rollback
-        foreach ($migrations as $migration) {
-            try {
+        try {
+            foreach ($migrations as $migration) {
                 $this->doMigration($migration, $version, $direction);
                 $runMigrations[] = $migration;
-            } catch (Exception $exception) {
-                $fMigration = $migration;
-                break;
             }
-        }
+        } catch (Exception $exception) {
+            $details = sprintf('"%1$s" %2$s', $migration->getKey(), ($direction > 0) ? 'up' : 'down');
 
-        // If successful, stop here
-        if ($exception === null) {
-            return;
-        }
+            try {
+                $this->rollbackMigrations($version, $direction, $runMigrations);
+            } catch (RuntimeException $rollbackException) {
+                throw new RuntimeException(
+                    sprintf('The %s migration and subsequent rollback were unsuccessful', $details),
+                    0,
+                    $rollbackException
+                );
+            }
 
-        $dirStr = ($direction > 0) ? 'up' : 'down';
-        $key = $fMigration->getKey();
-
-        try {
-            $this->rollbackMigrations($version, $direction, $runMigrations);
-        } catch (RuntimeException $rollbackException) {
             throw new RuntimeException(
-                sprintf('The "%1$s" %2$s migration and subsequent rollback were unsuccessful', $key, $dirStr),
+                sprintf('The %s migration failed and rollback was successful', $details),
                 0,
-                $rollbackException
+                $exception
             );
         }
-
-        throw new RuntimeException(
-            sprintf('The "%1$s" %2$s migration failed and rollback was successful', $key, $dirStr),
-            0,
-            $exception
-        );
     }
 
     /**
