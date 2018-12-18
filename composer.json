@@ -1,5 +1,5 @@
 {
-    "name": "rebelcode/php-sql-migrations",
+    "name": "rebelcode/sql-migrations",
     "description": "A lightweight SQL migrations library for PHP.",
     "type": "library",
     "license": "MIT",
