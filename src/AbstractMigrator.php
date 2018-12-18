@@ -77,36 +77,56 @@ abstract class AbstractMigrator implements MigratorInterface
         // Queue of migrations that have been run
         $runMigrations = [];
         // Will hold the failed migration and the corresponding exception, if any
-        $mException = null;
-        $fMigration = null;
+        $migrationException = null;
+        $failedMigration = null;
 
         foreach ($migrations as $migration) {
             try {
                 $this->doMigration($migration, $version, $direction);
                 $runMigrations[] = $migration;
-            } catch (Exception $mException) {
-                $fMigration = $migration;
+            } catch (Exception $migrationException) {
+                $failedMigration = $migration;
                 break;
             }
         }
 
-        // If no exception was thrown, simply return
-        if ($mException === null) {
-            return;
+        // If migrating failed, rollback the run migrations
+        if ($migrationException !== null && $failedMigration !== null) {
+            $this->handleMigrationFailure($version, $direction, $runMigrations, $failedMigration, $migrationException);
         }
+    }
+
+    /**
+     * Rolls back any changes made by a list of run migrations,
+     *
+     * @since [*next-version*]
+     *
+     * @param int                              $version    An integer version number to migration to.
+     * @param int                              $direction  A positive integer for "up" migrations or a negative integer
+     *                                                     for "down" migrations.
+     * @param MigrationInterface[]|Traversable $migrations The list of migration instances that were successfully run
+     *                                                     prior to the failure.
+     * @param MigrationInterface               $fMigration The migration instance that failed.
+     * @param Exception                        $exception  The exception that was thrown.
+     */
+    protected function handleMigrationFailure(
+        $version,
+        $direction,
+        $migrations,
+        MigrationInterface $fMigration,
+        Exception $exception
+    ) {
+        $dirStr = ($direction > 0) ? 'up' : 'down';
+        $fMigrKey = $fMigration->getKey();
 
         // If an exception was thrown, iterate through the queue and run each migration in the reverse direction
-        foreach ($runMigrations as $rMigration) {
+        foreach ($migrations as $migration) {
             try {
-                $this->doMigration($rMigration, $version, $direction * -1);
+                $this->doMigration($migration, $version, $direction * -1);
             } catch (Exception $rException) {
                 // Hopefully this never happens
                 throw new RuntimeException(
-                    sprintf(
-                        'The "%1$s" %2$s migration failed and rollback was unsuccessful; consider resetting your db',
-                        $fMigration->getKey(),
-                        $direction > 0 ? 'up' : 'down'
-                    ),
+                    sprintf('The "%1$s" %2$s migration failed and rolling back was unsuccessful', $fMigrKey, $dirStr),
                     null,
                     $rException
                 );
@@ -115,13 +135,9 @@ abstract class AbstractMigrator implements MigratorInterface
 
         // Wrap the previously thrown exception in a runtime exception and throw
         throw new RuntimeException(
-            sprintf(
-                'The "%1$s" %2$s migration failed. Rollback was successful',
-                $fMigration->getKey(),
-                $direction > 0 ? 'up' : 'down'
-            ),
+            sprintf('The "%1$s" %2$s migration failed. Rollback was successful', $fMigrKey, $dirStr),
             0,
-            $mException
+            $exception
         );
     }
 
