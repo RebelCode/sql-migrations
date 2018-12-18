@@ -57,10 +57,10 @@ class Migration implements MigrationInterface
      */
     public function __construct($key, $priority, $upSql, $downSql)
     {
-        $this->key = $key;
+        $this->key      = $key;
         $this->priority = $priority;
-        $this->upSql = $upSql;
-        $this->downSql = $downSql;
+        $this->upSql    = $upSql;
+        $this->downSql  = $downSql;
     }
 
     /**

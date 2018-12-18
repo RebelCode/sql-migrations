@@ -26,6 +26,7 @@ abstract class AbstractLoggingMigrator extends AbstractMigrator
 
         if ($direction < 0) {
             $this->delogMigration($migration, $version);
+
             return;
         }
 

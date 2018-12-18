@@ -39,16 +39,16 @@ abstract class AbstractMigrator implements MigratorInterface
      *
      * @since [*next-version*]
      *
-     * @param int      $targetVer   The target version.
-     * @param int|null $direction   This will be set to a positive integer for "up" migrations, a negative integer for
-     *                              "down" migrations or zero if no migration is required.
+     * @param int      $targetVer The target version.
+     * @param int|null $direction This will be set to a positive integer for "up" migrations, a negative integer for
+     *                            "down" migrations or zero if no migration is required.
      *
      * @return int[]|string[] An array of versions that need to be processed.
      */
     protected function getMigrationInfo($targetVer, &$direction = null)
     {
         $targetVer = max(0, (int) $targetVer);
-        $currVer = max(0, (int) $this->getCurrentVersion());
+        $currVer   = max(0, (int) $this->getCurrentVersion());
         $direction = $targetVer - $currVer;
 
         if ($direction === 0) {
@@ -104,7 +104,7 @@ abstract class AbstractMigrator implements MigratorInterface
     }
 
     /**
-     * Rolls back any changes made by a list of run migrations,
+     * Rolls back any changes made by a list of run migrations,.
      *
      * @since [*next-version*]
      *
@@ -143,8 +143,7 @@ abstract class AbstractMigrator implements MigratorInterface
      *
      * @return MigrationInterface[] The sorted migration instance.
      */
-    protected
-    function sortMigrations(
+    protected function sortMigrations(
         $migrations,
         $direction = 1
     ) {
@@ -173,8 +172,7 @@ abstract class AbstractMigrator implements MigratorInterface
      *
      * @throws RuntimeException If the query failed.
      */
-    protected
-    function doMigration(
+    protected function doMigration(
         MigrationInterface $migration,
         $version,
         $direction
@@ -195,8 +193,7 @@ abstract class AbstractMigrator implements MigratorInterface
      * @param MigrationInterface[]|Traversable $migrations The list of migration instances that were run.
      * @param RuntimeException                 $exception  The exception that was thrown.
      */
-    protected
-    function onMigrationsError(
+    protected function onMigrationsError(
         $version,
         $direction,
         $migrations,
