@@ -1,4 +1,4 @@
-# RebelCode - PHP SQL Migrations
+# RebelCode - SQL Migrations
 
 [![Build Status](https://travis-ci.org/RebelCode/sql-migrations.svg?branch=develop)](https://travis-ci.org/RebelCode/sql-migrations)
 [![Maintainability](https://api.codeclimate.com/v1/badges/c0106b23b1e5164f49ff/maintainability)](https://codeclimate.com/github/RebelCode/sql-migrations/maintainability)
