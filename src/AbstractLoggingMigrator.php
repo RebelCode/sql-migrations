@@ -49,8 +49,8 @@ abstract class AbstractLoggingMigrator extends AbstractMigrator
             $migration->getUpQuery(),
             $migration->getDownQuery(),
         ];
-        $valuesQuoted = array_map(function ($v) {
-            return sprintf('"%s"', $v);
+        $valuesQuoted = array_map(function ($value) {
+            return sprintf('"%s"', $value);
         }, $values);
         $valuesList = implode(', ', $valuesQuoted);
 
