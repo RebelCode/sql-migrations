@@ -58,11 +58,13 @@ abstract class AbstractDistributedMigrator extends AbstractLoggingMigrator
         );
 
         $migrations = array_map(function ($row) {
+            $arr = (array) $row;
+
             return new Migration(
-                $row['key'],
-                $row['priority'],
-                $row['up'],
-                $row['down']
+                $arr['key'],
+                $arr['priority'],
+                $arr['up'],
+                $arr['down']
             );
         }, $rows);
 

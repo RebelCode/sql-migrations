@@ -120,8 +120,10 @@ abstract class AbstractLoggingMigrator extends AbstractMigrator
             sprintf('SELECT MAX(`version`) AS `version` FROM `%s`;', $this->getMigrationLogTable())
         );
 
-        return isset($result[0]['version'])
-            ? $result[0]['version']
+        $row = (array) $result['0'];
+
+        return isset($row[0]['version'])
+            ? $row[0]['version']
             : 0;
     }
 
